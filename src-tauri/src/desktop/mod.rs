@@ -11,6 +11,7 @@
 
 #![cfg(target_os = "windows")]
 
+pub mod guard;
 pub mod style;
 pub mod watcher;
 pub mod workerw;
@@ -18,8 +19,8 @@ pub mod workerw;
 use raw_window_handle::{HasWindowHandle, RawWindowHandle};
 use tauri::WebviewWindow;
 use windows_sys::Win32::UI::WindowsAndMessaging::{
-    GetAncestor, IsWindow, SetWindowPos, GA_ROOT, HWND_BOTTOM, HWND_TOP, SWP_NOACTIVATE,
-    SWP_NOMOVE, SWP_NOSIZE,
+    GetAncestor, GetWindow, IsWindow, SetWindowPos, GA_ROOT, GW_HWNDPREV, HWND_BOTTOM, HWND_TOP,
+    SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOSIZE,
 };
 
 /// 取 WebviewWindow 对应的原生顶层 HWND。
@@ -45,12 +46,18 @@ pub fn hwnd_of(window: &WebviewWindow) -> Option<isize> {
 
 /// 把窗口插到桌面窗口的正上方：
 /// 高于壁纸与桌面图标、低于所有普通应用窗口。
-fn insert_after_desktop(hwnd: isize) {
-    let anchor = workerw::find_desktop_host().unwrap_or(HWND_BOTTOM);
+///
+/// 注意 `SetWindowPos(hwnd, X)` 的语义是「把 X 放在 hwnd 之前」，
+/// 直接传桌面窗口会把便签压到桌面**下面**（Win+D 时整块看不到）。
+/// 正确做法是取桌面窗口上方紧邻的那个窗口，把便签插在它后面。
+pub(crate) fn insert_after_desktop(hwnd: isize) {
+    let desktop = workerw::find_desktop_host().unwrap_or(HWND_BOTTOM);
     unsafe {
+        let above = GetWindow(desktop, GW_HWNDPREV);
+        let insert_after = if above.is_null() { HWND_TOP } else { above };
         SetWindowPos(
             hwnd as _,
-            anchor,
+            insert_after,
             0,
             0,
             0,
@@ -68,6 +75,8 @@ pub fn pin_to_bottom(window: &WebviewWindow) -> Result<(), String> {
             return Err("窗口句柄无效".to_string());
         }
     }
+    // 顺手挂上窗口过程钩子，挡住「显示桌面」的最小化（幂等）
+    guard::install(hwnd);
     insert_after_desktop(hwnd);
     Ok(())
 }

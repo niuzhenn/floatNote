@@ -25,6 +25,8 @@ interface NoteListProps {
   onArchive: (id: string) => void;
   onUnarchive: (id: string) => void;
   onDelete: (id: string) => void;
+  /** 列表宽度（px），由外层拖动分隔条控制 */
+  width: number;
 }
 
 const TAB_BASE =
@@ -50,9 +52,13 @@ export function NoteList({
   onArchive,
   onUnarchive,
   onDelete,
+  width,
 }: NoteListProps) {
   return (
-    <aside className="flex h-full w-[240px] shrink-0 flex-col bg-surface px-3 pb-3 pt-11">
+    <aside
+      style={{ width }}
+      className="flex h-full shrink-0 flex-col bg-surface px-3 pb-3 pt-3"
+    >
       {/* 搜索：无边框，只有 hover/focus 时的浅底 */}
       <div className="group flex items-center gap-2 rounded-btn px-2 py-1.5 transition-colors hover:bg-black/[0.04] focus-within:bg-black/[0.045]">
         <Search size={14} strokeWidth={1.8} className="shrink-0 text-ink-faint" />
@@ -111,7 +117,7 @@ export function NoteList({
       </div>
 
       {/* 列表：顶部留出描边空间，否则第一张卡片的选中 ring 会被滚动容器裁掉 */}
-      <div className="-mx-1 mt-3 flex-1 space-y-2.5 overflow-y-auto px-1 pt-1.5 pb-2">
+      <div className="-mx-1 mt-3 flex-1 space-y-2 overflow-y-auto px-1 pt-1.5 pb-2">
         {notes.map((note) => (
           <MenuRoot key={note.id}>
             <MenuTrigger asChild>

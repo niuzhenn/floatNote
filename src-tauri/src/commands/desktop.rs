@@ -5,8 +5,8 @@ use crate::desktop;
 use crate::state::AppState;
 use crate::windows::note_window;
 
-const DEFAULT_W: f64 = 300.0;
-const DEFAULT_H: f64 = 320.0;
+const DEFAULT_W: f64 = 260.0;
+const DEFAULT_H: f64 = 290.0;
 
 /// 钉到桌面：创建（或复用）桌面便签小窗并挂到 WorkerW。
 ///
@@ -107,6 +107,12 @@ pub async fn desktop_pin(
     let _ = desktop::unpin_from_bottom(&win);
     let _ = win.set_focus();
 
+    // 立刻装上窗口钩子（挡住「显示桌面」的最小化、支持锁定），
+    // 不必等 2.5s 后的守护线程巡检才挂上
+    if let Some(hwnd) = desktop::hwnd_of(&win) {
+        desktop::guard::install(hwnd);
+    }
+
     state.windows.add(&note_id, win.label());
     {
         let conn = state.conn();
@@ -119,10 +125,30 @@ pub async fn desktop_pin(
     Ok(())
 }
 
+/// 设置便签小窗是否「固定位置」（锁定后不能拖动、不能改宽高）。
+#[tauri::command]
+pub async fn desktop_set_lock(
+    app: AppHandle,
+    label: String,
+    locked: bool,
+) -> Result<(), String> {
+    let win = app
+        .get_webview_window(&label)
+        .ok_or_else(|| "窗口不存在".to_string())?;
+    let hwnd = desktop::hwnd_of(&win).ok_or_else(|| "无法获取窗口句柄".to_string())?;
+    desktop::guard::set_locked(hwnd, locked);
+    log::info!("desktop_set_lock label={label} locked={locked} hwnd={hwnd}");
+    Ok(())
+}
+
 /// 取消钉桌面（供命令与内部调用共用）。
 pub fn unpin_internal(app: &AppHandle, note_id: &str) {
     let label = note_window::label_for(note_id);
     if let Some(win) = app.get_webview_window(&label) {
+        // 窗口销毁后句柄可能被系统复用，先清掉锁定标记
+        if let Some(hwnd) = desktop::hwnd_of(&win) {
+            desktop::guard::set_locked(hwnd, false);
+        }
         let _ = win.destroy();
     }
 

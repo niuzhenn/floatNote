@@ -1,4 +1,9 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { FilePlus2 } from "lucide-react";
 import * as api from "../lib/api";
 import { onAppNewNote, onAppOpenSettings, onNoteFocus } from "../lib/events";
@@ -12,6 +17,14 @@ import { EditorPane } from "../components/editor/EditorPane";
 import { WindowChrome } from "../components/layout/WindowChrome";
 import { SettingsDialog } from "../components/settings/SettingsDialog";
 import { PaperDialog } from "../components/ui/PaperDialog";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+
+/** 便签列表宽度的可拖动范围 */
+const LIST_MIN = 170;
+const LIST_MAX = 300;
+const LIST_DEFAULT = 200;
+/** 历史默认宽度：读到这些值视为「没手动调过」，自动跟随新默认 */
+const LIST_LEGACY_DEFAULTS = [240, 220];
 
 export function MainWindow() {
   const notesApi = useNotes();
@@ -35,6 +48,43 @@ export function MainWindow() {
   const [renameValue, setRenameValue] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
   const [forceReload, setForceReload] = useState(0);
+
+  // 便签列表宽度：可拖动分隔条调整，限制在 170~300px，并记住上次的值
+  const [listWidth, setListWidth] = useState(() => {
+    const saved = Number(window.localStorage.getItem("floatnote:listWidth"));
+    if (!Number.isFinite(saved) || saved <= 0) return LIST_DEFAULT;
+    // 旧默认值当作「没调过」，直接跟随新默认；其余按新范围夹一下
+    if (LIST_LEGACY_DEFAULTS.includes(saved)) return LIST_DEFAULT;
+    return Math.min(LIST_MAX, Math.max(LIST_MIN, saved));
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("floatnote:listWidth", String(listWidth));
+  }, [listWidth]);
+
+  const startResize = (event: ReactPointerEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = listWidth;
+
+    // 拖动期间锁定光标与选区，避免选中正文文字
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+
+    const onMove = (moveEvent: PointerEvent) => {
+      const next = Math.round(startWidth + (moveEvent.clientX - startX));
+      setListWidth(Math.min(LIST_MAX, Math.max(LIST_MIN, next)));
+    };
+    const onUp = () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+  };
 
   const current = notesApi.current;
 
@@ -151,9 +201,10 @@ export function MainWindow() {
 
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-surface">
-      <WindowChrome />
+      <WindowChrome dragLeft={listWidth} />
 
       <NoteList
+        width={listWidth}
         notes={notesApi.notes}
         currentNoteId={notesApi.currentNoteId}
         scope={scope}
@@ -189,6 +240,18 @@ export function MainWindow() {
           setDeleteTarget(target);
         }}
       />
+
+      {/* 左右拖动调整列表宽度：热区 7px，中间一条 1px 细线，hover 变琥珀色 */}
+      <div
+        onPointerDown={startResize}
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="拖动调整便签列表宽度"
+        title="拖动调整宽度"
+        className="group/resize relative z-20 w-[7px] shrink-0 cursor-col-resize"
+      >
+        <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-black/[0.05] transition-colors duration-150 group-hover/resize:bg-accent/70" />
+      </div>
 
       {current ? (
         <EditorPane
@@ -260,35 +323,20 @@ export function MainWindow() {
         </div>
       </PaperDialog>
 
-      <PaperDialog
+      <ConfirmDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => !open && setDeleteTarget(null)}
         title="删除这条便签？"
         description="删除后无法恢复，桌面上的小窗也会一并关闭。"
-        width={380}
-      >
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => setDeleteTarget(null)}
-            className="rounded-btn px-3 py-1.5 text-[13px] text-ink-muted transition-colors hover:bg-black/[0.05]"
-          >
-            取消
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              if (!deleteTarget) return;
-              const id = deleteTarget.id;
-              setDeleteTarget(null);
-              notesApi.remove(id).catch((err) => console.error("delete failed", err));
-            }}
-            className="rounded-btn bg-[#C4453F]/12 px-3 py-1.5 text-[13px] font-medium text-[#C4453F] transition-colors hover:bg-[#C4453F]/20"
-          >
-            删除
-          </button>
-        </div>
-      </PaperDialog>
+        confirmLabel="删除"
+        tone="danger"
+        onConfirm={() => {
+          if (!deleteTarget) return;
+          const id = deleteTarget.id;
+          setDeleteTarget(null);
+          notesApi.remove(id).catch((err) => console.error("delete failed", err));
+        }}
+      />
 
       {toast ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-4 z-40 flex justify-center">

@@ -29,47 +29,34 @@ export function NoteListCard({
       onDoubleClick={onRename}
       style={paperSurface(note.color)}
       className={cn(
-        "group relative flex h-[96px] w-full flex-col gap-1.5 overflow-hidden rounded-card px-3 py-2 text-left",
-        "shadow-card transition-all duration-150 ease-paper",
-        "hover:-translate-y-px hover:shadow-card-hover",
-        selected && "shadow-card-hover ring-[1.5px] ring-accent",
+        // 扁平化：不用投影，用 1px 细描边界定卡片；hover 只加深描边，不做位移
+        // 紧凑高度：标题一行 + 摘要与时间同行，一屏能多放一张
+        "group relative flex h-[56px] w-full flex-col justify-center gap-0.5 overflow-hidden rounded-check px-3 text-left",
+        "ring-1 ring-black/[0.07] transition-[box-shadow] duration-150",
+        "hover:ring-black/[0.16]",
+        selected && "ring-[1.5px] ring-accent",
       )}
     >
-      <span
-        className="pointer-events-none absolute inset-x-0 top-0 h-[3px] opacity-70"
-        style={{ backgroundColor: token.deep }}
-      />
-
-      <div className="flex shrink-0 items-start gap-1.5">
+      <div className="flex shrink-0 items-center gap-1.5">
         <span className="line-clamp-1 flex-1 text-list-title" style={{ color: token.ink }}>
           {note.title.trim() || "无标题"}
         </span>
         {note.pinned ? (
-          <Pin
-            size={11}
-            strokeWidth={2.2}
-            className="mt-[3px] shrink-0 opacity-45"
-            style={{ color: token.ink }}
-          />
+          <Pin size={11} strokeWidth={2.2} className="shrink-0 opacity-45" style={{ color: token.ink }} />
         ) : null}
         {pinnedToDesktop ? (
-          <span className="mt-[6px] h-1.5 w-1.5 shrink-0 animate-dot-in rounded-full bg-accent" />
+          <span className="h-1.5 w-1.5 shrink-0 animate-dot-in rounded-full bg-accent" />
         ) : null}
       </div>
 
-      <p
-        className="line-clamp-2 shrink-0 pr-1 text-micro"
-        style={{ color: token.sub }}
-      >
-        {excerpt(note.contentText, 48) || "空白便签"}
-      </p>
-
-      <span
-        className="mt-auto shrink-0 font-mono text-micro opacity-60"
-        style={{ color: token.sub }}
-      >
-        {relativeTime(note.updatedAt)}
-      </span>
+      <div className="flex shrink-0 items-baseline gap-2">
+        <p className="line-clamp-1 flex-1 text-micro" style={{ color: token.sub }}>
+          {excerpt(note.contentText, 48) || "空白便签"}
+        </p>
+        <span className="shrink-0 font-mono text-micro opacity-60" style={{ color: token.sub }}>
+          {relativeTime(note.updatedAt)}
+        </span>
+      </div>
     </button>
   );
 }

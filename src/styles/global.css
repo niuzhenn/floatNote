@@ -39,22 +39,22 @@ button {
   background: rgba(232, 178, 74, 0.32);
 }
 
-/* 细滚动条，避免抢视觉 */
+/* 细滚动条：只留 4px 视觉宽度，尽量贴边不抢内容 */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.13);
-  border: 3px solid transparent;
+  background: rgba(0, 0, 0, 0.14);
+  border: 2px solid transparent;
   border-radius: 8px;
   background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 0, 0, 0.26);
   background-clip: content-box;
 }
 
@@ -62,7 +62,8 @@ button {
 .ProseMirror {
   outline: none;
   min-height: 100%;
-  line-height: 1.65;
+  /* 正文行高：主窗口与桌面便签共用，比常见 1.6 略松，长文更好读 */
+  line-height: 1.75;
   word-break: break-word;
 }
 

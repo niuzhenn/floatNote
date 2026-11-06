@@ -5,11 +5,20 @@ mod state;
 mod tray;
 mod windows;
 
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use rusqlite::Connection;
 use tauri::{Manager, WindowEvent};
 
 use crate::commands::desktop as desktop_cmds;
 use crate::state::AppState;
+
+/// 是否正在真正退出。
+///
+/// 平时关闭窗口只是「收进托盘」（CloseRequested 里 prevent_close + hide），
+/// 而 tray 菜单「退出」走的是同一条窗口关闭路径，会被这个拦截吃掉，
+/// 表现就是点了退出、进程却一直在。所以退出前先把标记置为 true。
+pub static QUITTING: AtomicBool = AtomicBool::new(false);
 
 /// 首次启动时写入一条示例便签（含待办清单，方便立刻看到勾选效果）。
 fn seed_if_empty(conn: &Connection) {
@@ -24,21 +33,11 @@ fn seed_if_empty(conn: &Connection) {
         return;
     };
 
-    let html = concat!(
-        "<p>这是一条示例便签，内容会自动保存。</p>",
-        "<ul data-type=\"taskList\">",
-        "<li data-checked=\"false\"><label><input type=\"checkbox\"></label><div><p>在便签栏右键，选择「钉到桌面」</p></div></li>",
-        "<li data-checked=\"false\"><label><input type=\"checkbox\"></label><div><p>勾掉这一项，文字会自动划掉</p></div></li>",
-        "</ul>",
-        "<p>工具栏里有加粗、列表、待办、高亮等常用格式。</p>"
-    );
-    let text = "这是一条示例便签，内容会自动保存。在便签栏右键，选择「钉到桌面」。勾掉这一项，文字会自动划掉。";
-
     let patch = db::notes_repo::NotePatch {
         id: note.id,
-        title: Some("欢迎使用便签".to_string()),
-        content_html: Some(html.to_string()),
-        content_text: Some(text.to_string()),
+        title: Some(db::schema::WELCOME_TITLE.to_string()),
+        content_html: Some(db::schema::WELCOME_HTML.to_string()),
+        content_text: Some(db::schema::WELCOME_TEXT.to_string()),
         color: None,
         pinned: None,
     };
@@ -200,10 +199,25 @@ pub fn run() {
                 });
             }
 
+            // 自检：`note.exe --quit-test` 启动 4 秒后按托盘「退出」的路径退出，
+            // 用来验证 QUITTING 标记能绕过 CloseRequested 的「收进托盘」拦截
+            if std::env::args().any(|arg| arg == "--quit-test") {
+                let handle = app.handle().clone();
+                std::thread::spawn(move || {
+                    std::thread::sleep(std::time::Duration::from_secs(4));
+                    log::info!("QUIT_TEST_START");
+                    tray::quit_app(&handle);
+                });
+            }
+
             Ok(())
         })
         .on_window_event(|window, event| match event {
             WindowEvent::CloseRequested { api, .. } => {
+                // 正在退出时不拦截，否则退出流程会被「收进托盘」卡死
+                if crate::QUITTING.load(Ordering::SeqCst) {
+                    return;
+                }
                 if window.label() == "main" {
                     // 关闭 = 收进托盘，不退出进程
                     api.prevent_close();
@@ -239,6 +253,7 @@ pub fn run() {
             commands::desktop::desktop_unpin,
             commands::desktop::desktop_list_pinned,
             commands::desktop::desktop_unpin_all,
+            commands::desktop::desktop_set_lock,
             commands::window::window_minimize_to_tray,
             commands::window::window_show_main,
             commands::window::window_hide_main,

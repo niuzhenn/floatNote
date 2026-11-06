@@ -56,16 +56,17 @@ export async function unpinNoteFromDesktop(noteId: string): Promise<void> {
   return invoke<void>("desktop_unpin", { noteId });
 }
 
+/** 设置桌面便签小窗是否固定位置（锁定后在窗口层面禁止拖动与改尺寸） */
+export async function setNoteWindowLock(label: string, locked: boolean): Promise<void> {
+  return invoke<void>("desktop_set_lock", { label, locked });
+}
+
 export async function listPinnedNotes(): Promise<string[]> {
   return invoke<string[]>("desktop_list_pinned");
 }
 
 export async function unpinAllNotes(): Promise<void> {
   return invoke<void>("desktop_unpin_all");
-}
-
-export async function minimizeToTray(): Promise<void> {
-  return invoke<void>("window_minimize_to_tray");
 }
 
 export async function showMainWindow(): Promise<void> {

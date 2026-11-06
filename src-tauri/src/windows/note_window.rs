@@ -26,7 +26,8 @@ pub fn build(
         .min_inner_size(220.0, 180.0)
         .decorations(false)
         .transparent(true)
-        .shadow(true)
+        // 关掉系统 DWM 阴影：它在桌面上太重，改由 CSS 画一圈很淡的投影
+        .shadow(false)
         .skip_taskbar(true)
         .always_on_top(false)
         .visible(false)

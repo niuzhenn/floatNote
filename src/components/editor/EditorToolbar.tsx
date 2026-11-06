@@ -38,14 +38,10 @@ export function EditorToolbar({ editor, compact = false, className }: EditorTool
     highlight: editor.isActive("highlight"),
   };
 
+  // 与主窗口一致：不用白底胶囊与投影，图标直接印在纸面上
   if (compact) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-0.5 rounded-full bg-white/78 px-1 py-0.5 shadow-card backdrop-blur-md",
-          className,
-        )}
-      >
+      <div className={cn("flex items-center gap-0.5", className)}>
         <IconButton label="加粗" size="sm" active={active.bold} onClick={() => chain().toggleBold().run()}>
           <Bold size={14} strokeWidth={2} />
         </IconButton>

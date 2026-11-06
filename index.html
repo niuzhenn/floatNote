@@ -10,10 +10,12 @@
       #root {
         height: 100%;
         margin: 0;
+        /* 保持透明：桌面便签小窗是透明窗口，一旦这里有不透明底色，
+           窗口移动时重绘就会露出这层灰底，看起来像"便签变色"，圆角也会被填成方角。
+           主窗口的底色由 MainWindow 根节点自己画。 */
         background: transparent;
       }
       body {
-        background-color: #f4f3f0;
         font-family: "Segoe UI Variable Display", "Segoe UI", "PingFang SC",
           "Microsoft YaHei", system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
