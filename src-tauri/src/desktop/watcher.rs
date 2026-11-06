@@ -21,8 +21,8 @@ use crate::state::AppState;
 const OFFSCREEN_THRESHOLD: f64 = -30000.0;
 
 /// 巡检间隔：直接等于「Win+D 之后便签被盖住的时长」。
-/// 100ms 约 6 帧，肉眼基本察觉不到；再快收益很小，反而增加主线程负担。
-const TICK: Duration = Duration::from_millis(100);
+/// 50ms 约 3 帧，几乎看不到空档；再往下压收益递减，主线程调度次数会翻倍。
+const TICK: Duration = Duration::from_millis(50);
 
 pub fn start(app: AppHandle) {
     std::thread::spawn(move || loop {
