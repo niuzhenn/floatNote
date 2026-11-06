@@ -1,4 +1,4 @@
-import { Plus, Search } from "lucide-react";
+import { Archive, Plus, Search } from "lucide-react";
 import { cn } from "../../lib/cn";
 import type { Note, NoteScope, PaperColor } from "../../types";
 import { NoteContextMenu } from "./NoteContextMenu";
@@ -57,7 +57,7 @@ export function NoteList({
   return (
     <aside
       style={{ width }}
-      className="flex h-full shrink-0 flex-col bg-surface px-3 pb-3 pt-3"
+      className="flex h-full shrink-0 flex-col bg-surface px-2 pb-3 pt-3"
     >
       {/* 搜索：无边框，只有 hover/focus 时的浅底 */}
       <div className="group flex items-center gap-2 rounded-btn px-2 py-1.5 transition-colors hover:bg-black/[0.04] focus-within:bg-black/[0.045]">
@@ -151,27 +151,37 @@ export function NoteList({
         {notes.length === 0 ? (
           <div className="mt-10 flex flex-col items-center px-4 text-center">
             <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl border-[1.5px] border-dashed border-black/[0.14] text-ink-faint">
-              <Plus size={26} strokeWidth={1.4} />
+              {scope === "archived" ? (
+                <Archive size={26} strokeWidth={1.3} />
+              ) : (
+                <Plus size={26} strokeWidth={1.4} />
+              )}
             </div>
             <p className="mt-4 text-[14px] text-ink">
               {scope === "archived" ? "还没有归档的便签" : "新建一条便签"}
             </p>
             <p className="mt-1 text-[12px] text-ink-faint">
-              {query ? "试试别的关键词" : "Ctrl + N"}
+              {query
+                ? "试试别的关键词"
+                : scope === "archived"
+                  ? "在便签上右键可以归档"
+                  : "Ctrl + N"}
             </p>
           </div>
         ) : null}
       </div>
 
-      {/* 新建 */}
-      <button
-        type="button"
-        onClick={onCreate}
-        className="mt-1 flex items-center gap-1.5 rounded-btn px-2 py-2 text-[13px] text-ink-muted transition-colors hover:bg-black/[0.045] hover:text-ink"
-      >
-        <Plus size={15} strokeWidth={2} />
-        新建便签
-      </button>
+      {/* 新建：只在「便签」视图提供，归档区不该在这里创建新便签 */}
+      {scope === "active" ? (
+        <button
+          type="button"
+          onClick={onCreate}
+          className="mt-1 flex items-center gap-1.5 rounded-btn px-2 py-2 text-[13px] text-ink-muted transition-colors hover:bg-black/[0.045] hover:text-ink"
+        >
+          <Plus size={15} strokeWidth={2} />
+          新建便签
+        </button>
+      ) : null}
     </aside>
   );
 }

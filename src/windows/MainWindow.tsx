@@ -4,7 +4,7 @@ import {
   useState,
   type PointerEvent as ReactPointerEvent,
 } from "react";
-import { FilePlus2 } from "lucide-react";
+import { Archive, FilePlus2 } from "lucide-react";
 import * as api from "../lib/api";
 import { onAppNewNote, onAppOpenSettings, onNoteFocus } from "../lib/events";
 import { useNotes } from "../hooks/useNotes";
@@ -270,20 +270,28 @@ export function MainWindow() {
       ) : (
         <section className="flex flex-1 flex-col items-center justify-center bg-[#FAF9F6]">
           <div className="flex h-[72px] w-[72px] items-center justify-center rounded-2xl border-[1.5px] border-dashed border-black/[0.13] text-ink-faint">
-            <FilePlus2 size={26} strokeWidth={1.4} />
+            {scope === "archived" ? (
+              <Archive size={26} strokeWidth={1.3} />
+            ) : (
+              <FilePlus2 size={26} strokeWidth={1.4} />
+            )}
           </div>
           <p className="mt-4 text-[14px] text-ink">
-            {scope === "archived" ? "这里是归档区" : "还没有便签"}
+            {scope === "archived" ? "还没有归档的便签" : "还没有便签"}
           </p>
-          <button
-            type="button"
-            onClick={() => {
-              notesApi.createNote().catch((err) => console.error(err));
-            }}
-            className="mt-3 rounded-btn bg-accent/16 px-3 py-1.5 text-[13px] font-medium text-accent-deep transition-colors hover:bg-accent/24"
-          >
-            新建便签
-          </button>
+          {scope === "archived" ? (
+            <p className="mt-2 text-[12.5px] text-ink-faint">在便签上右键即可归档</p>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                notesApi.createNote().catch((err) => console.error(err));
+              }}
+              className="mt-3 rounded-btn bg-accent/16 px-3 py-1.5 text-[13px] font-medium text-accent-deep transition-colors hover:bg-accent/24"
+            >
+              新建便签
+            </button>
+          )}
         </section>
       )}
 

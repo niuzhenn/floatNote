@@ -20,9 +20,9 @@ export const PAPER: Record<PaperColor, PaperToken> = {
   lilac: { bg: "#E6DBF8", deep: "#D5C6F1", ink: "#322B41", sub: "#6F6683", label: "淡紫" },
   sky: { bg: "#CDE8FB", deep: "#B2D7F2", ink: "#22323D", sub: "#5F7382", label: "天青" },
   stone: { bg: "#ECECEC", deep: "#DCDCDC", ink: "#2B2B2B", sub: "#6E6E6E", label: "石膏灰" },
-  charcoal: { bg: "#2C2C2C", deep: "#232323", ink: "#F2F0EC", sub: "#A8A29B", label: "深色" },
 };
 
+/// 可选纸色
 export const PAPER_ORDER: PaperColor[] = [
   "cream",
   "mint",
@@ -30,7 +30,6 @@ export const PAPER_ORDER: PaperColor[] = [
   "lilac",
   "sky",
   "stone",
-  "charcoal",
 ];
 
 export const WINDOW_BG = "#F4F3F0";

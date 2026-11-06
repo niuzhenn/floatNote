@@ -32,8 +32,6 @@ export default {
           "sky-deep": "#B4D8F2",
           stone: "#ECECEC",
           "stone-deep": "#DCDCDC",
-          charcoal: "#2C2C2C",
-          "charcoal-deep": "#1F1F1F",
         },
       },
       fontFamily: {

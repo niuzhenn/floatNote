@@ -1,11 +1,4 @@
-export type PaperColor =
-  | "cream"
-  | "mint"
-  | "sakura"
-  | "lilac"
-  | "sky"
-  | "stone"
-  | "charcoal";
+export type PaperColor = "cream" | "mint" | "sakura" | "lilac" | "sky" | "stone";
 
 export type NoteScope = "active" | "archived";
 

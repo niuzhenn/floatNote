@@ -16,7 +16,7 @@ function SectionTitle({ children }: { children: string }) {
 
 function Row({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-2">
+    <div className="flex items-center justify-between gap-6 py-3">
       <div className="min-w-0">
         <p className="text-[13px] text-ink">{label}</p>
         {hint ? <p className="mt-0.5 text-[11.5px] text-ink-faint">{hint}</p> : null}
@@ -83,8 +83,7 @@ export function SettingsDialog() {
   };
 
   return (
-    <PaperDialog open={open} onOpenChange={setOpen} title="设置" description="修改后立即生效">
-      <SectionTitle>新建便签</SectionTitle>
+    <PaperDialog open={open} onOpenChange={setOpen} title="设置">
       <Row label="默认纸色" hint="新建便签时使用的颜色">
         <div className="flex gap-1.5">
           {PAPER_ORDER.map((color) => (
@@ -123,12 +122,10 @@ export function SettingsDialog() {
         </div>
       </Row>
 
-      <SectionTitle>桌面</SectionTitle>
       <Row label="允许钉到桌面" hint="关闭后右键菜单将无法把小窗贴到桌面">
         <Toggle checked={pinEnabled} onCheckedChange={togglePin} label="允许钉到桌面" />
       </Row>
 
-      <SectionTitle>启动</SectionTitle>
       <Row label="开机自动启动" hint="登录 Windows 后自动在托盘待命">
         <Toggle checked={autostart} onCheckedChange={toggleAutostart} label="开机自动启动" />
       </Row>

@@ -193,7 +193,6 @@ export function NoteWindow() {
   }
 
   const token = PAPER[note.color] ?? PAPER.cream;
-  const isDark = note.color === "charcoal";
 
   return (
     <div
@@ -202,7 +201,6 @@ export function NoteWindow() {
         // 扁平化 + 轻投影：不用系统阴影，只用一圈淡淡的投影和细描边界定边缘
         "group relative flex h-full w-full flex-col overflow-hidden",
         "shadow-[0_2px_6px_rgba(0,0,0,.10)] ring-1 ring-black/[0.07]",
-        isDark && "paper-dark",
       )}
     >
       <span
@@ -283,12 +281,7 @@ export function NoteWindow() {
 
       {/* 浮动工具条：不占布局高度，隐藏时没有任何留白 */}
       <div className="pointer-events-none absolute inset-x-0 bottom-1.5 z-20 flex justify-center opacity-0 transition-opacity duration-150 group-hover:opacity-100">
-        <div
-          className={cn(
-            "pointer-events-auto rounded-full px-2.5 py-0.5 ring-1 backdrop-blur-md",
-            isDark ? "bg-black/35 ring-white/10" : "bg-white/52 ring-black/[0.06]",
-          )}
-        >
+        <div className="pointer-events-auto rounded-full bg-white/52 px-2.5 py-0.5 ring-1 ring-black/[0.06] backdrop-blur-md">
           <EditorToolbar editor={editor} compact />
         </div>
       </div>

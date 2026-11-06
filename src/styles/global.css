@@ -232,12 +232,6 @@ button {
   transform: rotate(42deg);
 }
 
-/* 深色便签上的复选框对比度 */
-.paper-dark .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
-  border-color: rgba(255, 255, 255, 0.38);
-  background: rgba(255, 255, 255, 0.12);
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

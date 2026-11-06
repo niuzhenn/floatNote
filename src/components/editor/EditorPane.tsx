@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { Editor } from "@tiptap/react";
-import { cn } from "../../lib/cn";
 import { countChars, paperSurface } from "../../lib/paper";
 import type { Note, SaveState } from "../../types";
 import { EditorToolbar } from "./EditorToolbar";
@@ -31,15 +30,11 @@ export function EditorPane({
 }: EditorPaneProps) {
   const [editor, setEditor] = useState<Editor | null>(null);
   const token = paperSurface(note.color);
-  const isDark = note.color === "charcoal";
 
   return (
     <section
       style={token}
-      className={cn(
-        "group/pane relative flex h-full min-w-0 flex-1 flex-col overflow-hidden",
-        isDark && "paper-dark",
-      )}
+      className="group/pane relative flex h-full min-w-0 flex-1 flex-col overflow-hidden"
     >
       {stale ? (
         <div className="flex items-center justify-between gap-3 bg-black/[0.06] px-5 py-1.5 text-[12px]">
