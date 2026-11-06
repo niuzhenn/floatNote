@@ -1,0 +1,248 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: transparent;
+  color: #242424;
+  font-family: "Segoe UI Variable Display", "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* 桌面应用观感：文字默认不可选，输入区域放开 */
+* {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+.ProseMirror {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+button {
+  font-family: inherit;
+}
+
+::selection {
+  background: rgba(232, 178, 74, 0.32);
+}
+
+/* 细滚动条，避免抢视觉 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.13);
+  border: 3px solid transparent;
+  border-radius: 8px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+  background-clip: content-box;
+}
+
+/* ---------- TipTap 排版 ---------- */
+.ProseMirror {
+  outline: none;
+  min-height: 100%;
+  line-height: 1.65;
+  word-break: break-word;
+}
+
+.ProseMirror > * + * {
+  margin-top: 0.55em;
+}
+
+.ProseMirror p {
+  margin: 0;
+}
+
+.ProseMirror h1 {
+  font-size: 1.34em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0.5em 0 0.2em;
+}
+
+.ProseMirror h2 {
+  font-size: 1.16em;
+  font-weight: 600;
+  margin: 0.45em 0 0.15em;
+}
+
+.ProseMirror h3 {
+  font-size: 1.02em;
+  font-weight: 600;
+  margin: 0.4em 0 0.1em;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  padding-left: 1.35em;
+  margin: 0;
+}
+
+.ProseMirror ul {
+  list-style: disc;
+}
+
+.ProseMirror ol {
+  list-style: decimal;
+}
+
+.ProseMirror blockquote {
+  margin: 0;
+  padding-left: 0.85em;
+  border-left: 2px solid rgba(0, 0, 0, 0.18);
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.ProseMirror code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 0.9em;
+  background: rgba(0, 0, 0, 0.07);
+  border-radius: 4px;
+  padding: 0.1em 0.32em;
+}
+
+.ProseMirror pre {
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  padding: 0.7em 0.85em;
+  overflow-x: auto;
+}
+
+.ProseMirror pre code {
+  background: none;
+  padding: 0;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.ProseMirror hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 0.9em 0;
+}
+
+.ProseMirror mark {
+  background: rgba(255, 214, 102, 0.55);
+  border-radius: 2px;
+  padding: 0 0.1em;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: rgba(0, 0, 0, 0.28);
+}
+
+/* ---------- 待办清单（勾选 + 中划线） ---------- */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  margin: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li + li {
+  margin-top: 0.22em;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex: 0 0 auto;
+  margin-top: 0.26em;
+  display: inline-flex;
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
+  text-decoration: line-through;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  opacity: 0.5;
+  transition: opacity 120ms ease;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid rgba(0, 0, 0, 0.26);
+  background: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  margin: 0;
+  position: relative;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"]:hover {
+  border-color: rgba(0, 0, 0, 0.42);
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked {
+  background-color: #e8b24a;
+  border-color: #d89f33;
+}
+
+.ProseMirror ul[data-type="taskList"] input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.6px;
+  top: 1.6px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 1.8px 1.8px 0;
+  transform: rotate(42deg);
+}
+
+/* 深色便签上的复选框对比度 */
+.paper-dark .ProseMirror ul[data-type="taskList"] input[type="checkbox"] {
+  border-color: rgba(255, 255, 255, 0.38);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

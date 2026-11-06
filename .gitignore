@@ -1,0 +1,10 @@
+node_modules/
+dist/
+src-tauri/target/
+*.log
+run-stdout.txt
+run-stderr.txt
+shot*.png
+.DS_Store
+.vscode/
+.idea/
