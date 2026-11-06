@@ -234,9 +234,15 @@ export function useNotes() {
   const archive = useCallback(
     async (id: string) => {
       await flush();
-      await api.archiveNote(id);
-      await refresh();
-      setToast("已归档");
+      await api
+        .archiveNote(id)
+        .then(() => refresh())
+        .then(() => setToast("已归档"))
+        // 被拒绝时（比如便签正钉在桌面上）要让人看到原因，不能静默失败
+        .catch((err) => {
+          console.error("archive failed", err);
+          setToast(typeof err === "string" ? err : "归档失败");
+        });
     },
     [flush, refresh, setToast],
   );

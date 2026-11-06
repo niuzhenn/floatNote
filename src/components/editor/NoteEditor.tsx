@@ -18,6 +18,8 @@ interface NoteEditorProps {
   compact?: boolean;
   fontSize?: number;
   reloadToken?: number;
+  /** 只读（归档视图用）：能选中、复制、滚动，但不能编辑 */
+  readOnly?: boolean;
   onChange: (html: string, text: string) => void;
   onReady?: (editor: Editor) => void;
 }
@@ -37,6 +39,7 @@ export function NoteEditor({
   compact = false,
   fontSize = 14,
   reloadToken = 0,
+  readOnly = false,
   onChange,
   onReady,
 }: NoteEditorProps) {
@@ -66,6 +69,7 @@ export function NoteEditor({
       }),
     ],
     content: html,
+    editable: !readOnly,
     editorProps: {
       attributes: {
         class: compact ? "outline-none" : "outline-none",
@@ -114,8 +118,9 @@ export function NoteEditor({
     if (!editor) return;
     editorRef.current = editor;
     readyRef.current?.(editor);
-    // Ctrl/Cmd + Enter 勾选当前待办项
+    // Ctrl/Cmd + Enter 勾选当前待办项（只读时忽略）
     const onKeyDown = (event: KeyboardEvent) => {
+      if (readOnly) return;
       if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
         event.preventDefault();
         editor.chain().focus().toggleTaskList().run();
@@ -124,7 +129,13 @@ export function NoteEditor({
     const node = editor.view.dom;
     node.addEventListener("keydown", onKeyDown);
     return () => node.removeEventListener("keydown", onKeyDown);
-  }, [editor]);
+  }, [editor, readOnly]);
+
+  // 归档视图只读：切换 scope 时同步可编辑状态
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(!readOnly);
+  }, [editor, readOnly]);
 
   // 切换便签时整篇替换（不触发 onChange）
   useEffect(() => {

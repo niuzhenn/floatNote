@@ -255,11 +255,14 @@ export function MainWindow() {
 
       {current ? (
         <EditorPane
+          // 归档视图只读：切换 scope 时重建，避免沿用上一份编辑器状态
+          key={`${current.id}:${scope}`}
           note={current}
           fontSize={fontSize}
           reloadToken={reloadToken + forceReload}
           saveState={saveState}
           stale={staleNoteId === current.id}
+          readOnly={scope === "archived"}
           onContentChange={notesApi.scheduleSave}
           onTitleChange={(title) => patchNote({ ...current, title })}
           onTitleCommit={() => {

@@ -116,7 +116,7 @@ pub fn notes_duplicate(
 
 #[tauri::command]
 pub fn notes_archive(app: AppHandle, state: State<'_, AppState>, id: String) -> Result<Note, String> {
-    // 归档前先收回桌面小窗，避免「库里已归档、桌面上还挂着」
+    // 与删除保持一致：归档前先收回桌面小窗，避免「库里已归档、桌面上还挂着」
     crate::commands::desktop::unpin_internal(&app, &id);
 
     let note = {

@@ -87,6 +87,7 @@ export function NoteContextMenu({
       </MenuItem>
 
       <MenuSeparator />
+      {/* 归档与删除一致：若钉在桌面上，后端会先收回小窗再归档 */}
       <MenuItem icon={<Archive size={14} />} onSelect={onArchive}>
         归档
       </MenuItem>
