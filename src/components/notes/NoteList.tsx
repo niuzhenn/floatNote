@@ -127,7 +127,8 @@ export function NoteList({
                   selected={note.id === currentNoteId}
                   pinnedToDesktop={isPinnedToDesktop(note.id)}
                   onSelect={() => onSelect(note.id)}
-                  onRename={() => onRename(note)}
+                  // 归档视图只读，双击不再进入改名
+                  onRename={scope === "archived" ? undefined : () => onRename(note)}
                 />
               </div>
             </MenuTrigger>

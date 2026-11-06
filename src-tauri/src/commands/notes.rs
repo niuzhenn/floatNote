@@ -70,6 +70,20 @@ pub fn notes_update(
 ) -> Result<Note, String> {
     let note = {
         let conn = state.conn();
+
+        // 归档便签只读：标题与正文一律拒绝修改（颜色、置顶等元数据不在此限制内）。
+        // 前端在归档视图已禁用编辑与双击改名，这里再兜一层，防止绕过入口改到归档内容。
+        let touches_content = patch.title.is_some()
+            || patch.content_html.is_some()
+            || patch.content_text.is_some();
+        if touches_content {
+            let existing = notes_repo::get(&conn, &patch.id)
+                .map_err(|e| format!("读取便签失败: {e}"))?;
+            if existing.map(|n| n.archived_at.is_some()).unwrap_or(false) {
+                return Err("这条便签已归档，取消归档后才能编辑".to_string());
+            }
+        }
+
         notes_repo::update(&conn, &patch)
             .map_err(|e| format!("保存便签失败: {e}"))?
             .ok_or_else(|| "便签不存在".to_string())?
