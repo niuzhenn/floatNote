@@ -350,8 +350,9 @@ export function MainWindow() {
       />
 
       {toast ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-40 flex justify-center">
-          <div className="animate-fade-in rounded-full bg-ink/88 px-3.5 py-1.5 text-[12px] text-white shadow-pop">
+        <div className="pointer-events-none absolute inset-x-0 bottom-4 z-40 flex justify-center px-6">
+          {/* 实心深色胶囊：不用半透明，保证在浅色纸面上也一眼能看到 */}
+          <div className="animate-fade-in rounded-full bg-[#1E1E1E] px-4 py-2 text-[12.5px] font-medium leading-none text-white shadow-[0_6px_20px_rgba(0,0,0,.34)]">
             {toast}
           </div>
         </div>

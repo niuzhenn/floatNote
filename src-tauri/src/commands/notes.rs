@@ -68,6 +68,14 @@ pub fn notes_update(
     state: State<'_, AppState>,
     patch: NotePatch,
 ) -> Result<Note, String> {
+    log::info!(
+        "notes_update id={} title={} html_len={} text_len={}",
+        patch.id,
+        patch.title.is_some(),
+        patch.content_html.as_ref().map(|s| s.chars().count()).unwrap_or(0),
+        patch.content_text.as_ref().map(|s| s.chars().count()).unwrap_or(0),
+    );
+
     let note = {
         let conn = state.conn();
 
@@ -79,14 +87,28 @@ pub fn notes_update(
         if touches_content {
             let existing = notes_repo::get(&conn, &patch.id)
                 .map_err(|e| format!("读取便签失败: {e}"))?;
-            if existing.map(|n| n.archived_at.is_some()).unwrap_or(false) {
-                return Err("这条便签已归档，取消归档后才能编辑".to_string());
+
+            // 已归档：静默忽略这次写入，直接返回当前内容。
+            // 不用 Err —— 前端把「保存失败」当成需要重试的错误，会反复重发同一个请求
+            //（切换视图时的 flush 就会不断撞上它），对用户表现为一直在报错。
+            // 只读本身由前端保证，这里只是兜底，不需要把拒绝变成异常。
+            if let Some(note) = existing {
+                if note.archived_at.is_some() {
+                    log::warn!("notes_update skipped: note {} is archived", patch.id);
+                    return Ok(note);
+                }
             }
         }
 
         notes_repo::update(&conn, &patch)
-            .map_err(|e| format!("保存便签失败: {e}"))?
-            .ok_or_else(|| "便签不存在".to_string())?
+            .map_err(|e| {
+                log::error!("notes_update db error id={}: {e}", patch.id);
+                format!("保存便签失败: {e}")
+            })?
+            .ok_or_else(|| {
+                log::warn!("notes_update: note {} not found", patch.id);
+                "便签不存在".to_string()
+            })?
     };
 
     broadcast(&app, "note://changed", &note, window.label());

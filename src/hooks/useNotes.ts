@@ -34,6 +34,8 @@ export function useNotes() {
 
   const saveTimer = useRef<number | null>(null);
   const pending = useRef<{ id: string; html: string; text: string } | null>(null);
+  /** 正在进行的保存请求：归档/删除前要等它落地，避免「先归档、后写回」的竞态 */
+  const inFlight = useRef<Promise<void> | null>(null);
 
   const current = notes.find((n) => n.id === currentNoteId) ?? null;
 
@@ -135,9 +137,18 @@ export function useNotes() {
     const data = pending.current;
     if (!data) return;
     pending.current = null;
+
+    // 发请求前再确认一次：这条便签可能刚被归档/删除，当前视图里已经找不到它，
+    // 此时写入没有意义（后端也会忽略），直接丢掉，连请求都不发。
+    const state = useUiStore.getState();
+    if (state.notes.length > 0 && !state.notes.some((n) => n.id === data.id)) {
+      setSaveState("idle");
+      return;
+    }
+
     setSaveState("saving");
 
-    await api
+    const request = api
       .updateNote({
         id: data.id,
         contentHtml: data.html,
@@ -155,6 +166,13 @@ export function useNotes() {
         setSaveState("error");
         setToast("保存失败，稍后会自动重试");
       });
+
+    // 记录在途请求：归档/删除这类会改变便签状态的操作用它来「等保存落地再动手」，
+    // 否则会出现「保存请求还没回来，先把便签归档了，保存请求随后被拒」的竞态。
+    const tracked = request.then(() => undefined);
+    inFlight.current = tracked;
+    await tracked;
+    if (inFlight.current === tracked) inFlight.current = null;
   }, [patchNote, setSaveState, setToast]);
 
   /** 编辑器内容变化 → 防抖落库 */
@@ -162,6 +180,12 @@ export function useNotes() {
     (html: string, text: string) => {
       const state = useUiStore.getState();
       if (!state.currentNoteId) return;
+      // 归档视图只读：任何写入都不该发生。
+      if (state.scope === "archived") return;
+      // 切换视图的瞬间 currentNoteId 可能还是上一个视图的便签（编辑器重建时带出一次 onChange），
+      // 只保存「确实属于当前视图列表」的便签，避免对已归档便签发写入请求。
+      if (!state.notes.some((n) => n.id === state.currentNoteId)) return;
+
       pending.current = { id: state.currentNoteId, html, text };
       setSaveState("saving");
 
@@ -234,6 +258,9 @@ export function useNotes() {
   const archive = useCallback(
     async (id: string) => {
       await flush();
+      // 等定时器触发的那次保存在途请求落地，再归档；
+      // 否则保存请求会晚于归档到达后端，被「归档只读」拒绝，内容也丢失。
+      if (inFlight.current) await inFlight.current;
       await api
         .archiveNote(id)
         .then(() => refresh())
@@ -258,12 +285,15 @@ export function useNotes() {
 
   const remove = useCallback(
     async (id: string) => {
+      // 删除同理：先把待保存内容写下去，避免删除后还挂着一个写回请求
+      await flush();
+      if (inFlight.current) await inFlight.current;
       await api.deleteNote(id);
       if (useUiStore.getState().currentNoteId === id) setCurrentNote(null);
       await refresh();
       setToast("已删除便签");
     },
-    [refresh, setCurrentNote, setToast],
+    [flush, refresh, setCurrentNote, setToast],
   );
 
   const switchScope = useCallback(
